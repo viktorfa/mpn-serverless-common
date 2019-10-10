@@ -1,0 +1,43 @@
+Resources:
+  # S3 HTTP Cache Bucket for Scrapy
+  HttpCacheBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: mpn-scraper-http-cache
+  FargateECSRepo:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName: mpn-scraper
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+            {
+              "rulePriority": 1,
+              "description": "Only keep 8 images",
+              "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 8
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+
+Outputs:
+  ECRRepo: # This should be the first output
+    Value: !Sub
+      - "#{AccountId}.dkr.ecr.#{Region}.amazonaws.com/#{Repo}"
+      - AccountId: !Ref AWS::AccountId
+        Region: !Ref AWS::Region
+        Repo: !Ref FargateECSRepo
+    Export:
+      Name: ECRRepo
+  HttpCacheBucket:
+    Value: !Ref HttpCacheBucket
+    Export:
+      Name: HttpCacheBucket
+  HttpCacheBucketArn:
+    Value: !GetAtt HttpCacheBucket.Arn
+    Export:
+      Name: HttpCacheBucketArn
