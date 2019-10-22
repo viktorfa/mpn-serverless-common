@@ -4,6 +4,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: mpn-scraper-http-cache
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 28
+            Status: Enabled
+            Id: DeleteAfter28Days
   FargateECSRepo:
     Type: "AWS::ECR::Repository"
     Properties:
