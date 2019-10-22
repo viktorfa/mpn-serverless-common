@@ -19,6 +19,7 @@ provider:
   region: eu-central-1
   stage: all
   logRetentionInDays: 1
+  profile: serverless-mpn-admin
 
 resources:
   - ${file(./cf-template.yml)}
