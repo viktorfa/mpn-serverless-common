@@ -1,4 +1,47 @@
 Resources:
+  StaticAssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: mpn-static-assets
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedMethods:
+              - "GET"
+              - "HEAD"
+  StaticAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticAssetsBucket
+      PolicyDocument:
+        Statement:
+          - Action: ["s3:GetObject"]
+            Effect: Allow
+            Resource: !Sub
+              - "#{BucketArn}/*"
+              - BucketArn: !GetAtt StaticAssetsBucket.Arn
+            Principal: "*"
+  StaticAssetsDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: "true"
+        Origins:
+          - DomainName: !GetAtt StaticAssetsBucket.DomainName
+            Id: "mpn-static-assets"
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        PriceClass: PriceClass_100 # Europe and US
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: "false"
+            Headers: ["Origin"]
+          TargetOriginId: "mpn-static-assets"
+          ViewerProtocolPolicy: "redirect-to-https"
+          AllowedMethods: ["GET", "HEAD", OPTIONS]
+          CachedMethods: ["GET", "HEAD", OPTIONS]
+
   # S3 HTTP Cache Bucket for Scrapy
   HttpCacheBucket:
     Type: AWS::S3::Bucket
@@ -46,3 +89,15 @@ Outputs:
     Value: !GetAtt HttpCacheBucket.Arn
     Export:
       Name: HttpCacheBucketArn
+  StaticAssetsBucket:
+    Value: !Ref StaticAssetsBucket
+    Export:
+      Name: StaticAssetsBucket
+  StaticAssetsBucketArn:
+    Value: !GetAtt StaticAssetsBucket.Arn
+    Export:
+      Name: StaticAssetsBucketArn
+  StaticAssetsDistribution:
+    Value: !Ref StaticAssetsDistribution
+    Export:
+      Name: StaticAssetsDistribution
